@@ -38,8 +38,8 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                echo 'Kubernetes Minikube Deploying...'
-                sh 'kubectl apply -f k8s.yaml'
+                echo 'Kubernetes Minikube par deploy ho raha hai...'
+                sh 'export KUBECONFIG=/home/nayab/.kube/config && kubectl apply -f k8s.yaml'
             }
         }
     }
