@@ -1,0 +1,94 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<!-- Hero Section -->
+<div class="text-white text-center py-5 px-4 gradient-bg shadow-sm">
+    <div class="container py-5">
+        <h1 class="display-3 fw-bolder mb-4">Automate Everything with <br><span class="text-info">CloudOps Portal</span></h1>
+        <p class="lead mb-5 mx-auto" style="max-width: 800px; font-weight: 300;">
+            A complete 3-Tier enterprise architecture demonstrating Infrastructure as Code, Container Orchestration, and Automated CI/CD Pipelines.
+        </p>
+        
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <div class="alert alert-light text-dark d-inline-block shadow-sm rounded-pill px-4 py-3" role="alert">
+                <i class="bi bi-person-check-fill text-success fs-5 me-2"></i> 
+                Welcome back, <strong>@User.Identity.Name</strong>!
+            </div>
+            <div class="mt-3">
+                <a href="/Home/Privacy" class="btn btn-info btn-lg px-5 rounded-pill fw-bold text-dark">Go to Dashboard</a>
+            </div>
+        }
+        else
+        {
+            <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+                <a href="/Identity/Account/Register" class="btn btn-info btn-lg px-5 py-3 rounded-pill fw-bold text-dark shadow">Get Started Now</a>
+                <a href="/Identity/Account/Login" class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill fw-bold shadow">Secure Login</a>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="container mt-5 pt-4">
+    <!-- Tech Stack Section -->
+    <div class="text-center mb-5">
+        <h2 class="fw-bold mb-3">Our Technology Stack</h2>
+        <p class="text-muted">Powered by industry-leading DevOps tools</p>
+    </div>
+
+    <div class="row g-4 text-center">
+        <!-- Card 1 -->
+        <div class="col-md-3">
+            <div class="card card-hover h-100 shadow-sm p-4">
+                <div class="text-primary tech-icon"><i class="bi bi-box-seam"></i></div>
+                <h4 class="fw-bold">Docker</h4>
+                <p class="text-muted small">Application containerization for consistent deployment across all environments.</p>
+            </div>
+        </div>
+        <!-- Card 2 -->
+        <div class="col-md-3">
+            <div class="card card-hover h-100 shadow-sm p-4">
+                <div class="text-info tech-icon"><i class="bi bi-bezier2"></i></div>
+                <h4 class="fw-bold">Kubernetes</h4>
+                <p class="text-muted small">Multi-server cluster orchestration for auto-scaling and high availability.</p>
+            </div>
+        </div>
+        <!-- Card 3 -->
+        <div class="col-md-3">
+            <div class="card card-hover h-100 shadow-sm p-4">
+                <div class="text-danger tech-icon"><i class="bi bi-rocket-takeoff"></i></div>
+                <h4 class="fw-bold">Jenkins CI/CD</h4>
+                <p class="text-muted small">Automated build, test (Selenium), and deployment pipelines upon Git commit.</p>
+            </div>
+        </div>
+        <!-- Card 4 -->
+        <div class="col-md-3">
+            <div class="card card-hover h-100 shadow-sm p-4">
+                <div class="text-success tech-icon"><i class="bi bi-shield-check"></i></div>
+                <h4 class="fw-bold">Terraform & Ansible</h4>
+                <p class="text-muted small">Infrastructure as Code (IaC) and configuration management for servers.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Architecture Section -->
+    <div class="row align-items-center mt-5 pt-5 pb-4">
+        <div class="col-lg-6">
+            <h2 class="fw-bold mb-4">Enterprise 3-Tier Architecture</h2>
+            <ul class="list-group list-group-flush fs-5">
+                <li class="list-group-item bg-transparent border-0 px-0"><i class="bi bi-check-circle-fill text-success me-3"></i> <strong>Frontend:</strong> Responsive UI with ASP.NET Core & Bootstrap</li>
+                <li class="list-group-item bg-transparent border-0 px-0"><i class="bi bi-check-circle-fill text-success me-3"></i> <strong>Backend:</strong> C# .NET 8.0 controllers & robust APIs</li>
+                <li class="list-group-item bg-transparent border-0 px-0"><i class="bi bi-check-circle-fill text-success me-3"></i> <strong>Database:</strong> Entity Framework with secure Authentication</li>
+                <li class="list-group-item bg-transparent border-0 px-0"><i class="bi bi-check-circle-fill text-success me-3"></i> <strong>Monitoring:</strong> Integrated with Prometheus & Grafana</li>
+            </ul>
+        </div>
+        <div class="col-lg-6 mt-4 mt-lg-0 text-center">
+            <div class="p-5 bg-white rounded-4 shadow-sm border">
+                <h3 class="text-primary mb-3"><i class="bi bi-server" style="font-size: 4rem;"></i></h3>
+                <h4>Highly Available Setup</h4>
+                <p class="text-muted">Designed to handle traffic spikes and ensure zero downtime deployment.</p>
+            </div>
+        </div>
+    </div>
+</div>

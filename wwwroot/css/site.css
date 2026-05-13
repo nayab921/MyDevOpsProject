@@ -1,0 +1,26 @@
+/* Custom Modern Styling */
+.gradient-bg {
+    background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+}
+
+.card-hover {
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    border: none;
+    border-radius: 15px;
+}
+
+.card-hover:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.15)!important;
+}
+
+.tech-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.text-gradient {
+    background: -webkit-linear-gradient(45deg, #00c6ff, #0072ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
