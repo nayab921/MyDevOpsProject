@@ -17,16 +17,16 @@ pipeline {
             steps {
                 echo 'Running Real Static Code Analysis...'
                 // Yahan YOUR_TOKEN ki jagah apna SonarQube ka token daalna hai
-                bat 'dotnet sonarscanner begin /k:"MyDevOpsProject" /d:sonar.host.url="http://localhost:9000" /d:sonar.login="YOUR_TOKEN"'
-                bat 'dotnet build "MyDevOpsProject.csproj"'
-                bat 'dotnet sonarscanner end /d:sonar.login="sqa_973cb53575b7804669c0ea881994528bfb0566f4"'
+                sh 'dotnet sonarscanner begin /k:"MyDevOpsProject" /d:sonar.host.url="http://localhost:9000" /d:sonar.login="YOUR_TOKEN"'
+                sh 'dotnet build "MyDevOpsProject.csproj"'
+                sh 'dotnet sonarscanner end /d:sonar.login="sqa_973cb53575b7804669c0ea881994528bfb0566f4"'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 echo 'Building Real Docker Image...'
-                bat "docker build -t ${IMAGE_NAME}:latest ."
+                sh "docker build -t ${IMAGE_NAME}:latest ."
             }
         }
 
@@ -34,7 +34,7 @@ pipeline {
             steps {
                 echo 'Running Real Vulnerability Scan...'
                 // Yeh command real mein scan karegi aur error aane par fail hogi
-                bat "trivy image --severity HIGH,CRITICAL ${IMAGE_NAME}:latest"
+                sh "trivy image --severity HIGH,CRITICAL ${IMAGE_NAME}:latest"
             }
         }
 
@@ -42,8 +42,9 @@ pipeline {
             steps {
                 echo 'Pushing to Docker Hub...'
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-id', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                    bat "echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin"
-                    bat "docker push ${IMAGE_NAME}:latest"
+                    // Windows ke %VAR% ko Linux ke $VAR se replace kiya gaya hai
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh "docker push ${IMAGE_NAME}:latest"
                 }
             }
         }
@@ -51,7 +52,7 @@ pipeline {
         stage('Deploy to Minikube') {
             steps {
                 echo 'Deploying to Kubernetes Cluster...'
-                bat "kubectl apply -f k8s.yaml"
+                sh "kubectl apply -f k8s.yaml"
             }
         }
     }
