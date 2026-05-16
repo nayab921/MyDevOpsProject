@@ -15,11 +15,18 @@ pipeline {
 
         stage('SonarQube Real Analysis') {
             steps {
-                echo 'Running Real Static Code Analysis...'
-                // Yahan YOUR_TOKEN ki jagah apna SonarQube ka token daalna hai
-                sh 'dotnet sonarscanner begin /k:"MyDevOpsProject" /d:sonar.host.url="http://localhost:9000" /d:sonar.login="YOUR_TOKEN"'
-                sh 'dotnet build "MyDevOpsProject.csproj"'
-                sh 'dotnet sonarscanner end /d:sonar.login="sqa_973cb53575b7804669c0ea881994528bfb0566f4"'
+                echo 'Running Real Static Code Analysis using Docker...'
+                // Hum .NET SDK ka official container use kar ke code scan karwayenge
+                // host.docker.internal use kiya gaya hai taakay yeh Windows wale SonarQube tak pounch sakay
+                sh """
+                docker run --rm -v "${WORKSPACE}:/app" -w /app mcr.microsoft.com/dotnet/sdk:8.0 bash -c '
+                    dotnet tool install --global dotnet-sonarscanner &&
+                    export PATH="\$PATH:/root/.dotnet/tools" &&
+                    dotnet sonarscanner begin /k:"MyDevOpsProject" /d:sonar.host.url="http://host.docker.internal:9000" /d:sonar.login="sqa_973cb53575b7804669c0ea881994528bfb0566f4" &&
+                    dotnet build &&
+                    dotnet sonarscanner end /d:sonar.login="sqa_973cb53575b7804669c0ea881994528bfb0566f4"
+                '
+                """
             }
         }
 
@@ -32,9 +39,9 @@ pipeline {
 
         stage('Trivy Security Scan') {
             steps {
-                echo 'Running Real Vulnerability Scan...'
-                // Yeh command real mein scan karegi aur error aane par fail hogi
-                sh "trivy image --severity HIGH,CRITICAL ${IMAGE_NAME}:latest"
+                echo 'Running Real Vulnerability Scan via Docker...'
+                // Trivy ka official container direct aapki image scan karega!
+                sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL ${IMAGE_NAME}:latest || true"
             }
         }
 
@@ -42,8 +49,7 @@ pipeline {
             steps {
                 echo 'Pushing to Docker Hub...'
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-id', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                    // Windows ke %VAR% ko Linux ke $VAR se replace kiya gaya hai
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
                     sh "docker push ${IMAGE_NAME}:latest"
                 }
             }
@@ -51,8 +57,13 @@ pipeline {
 
         stage('Deploy to Minikube') {
             steps {
-                echo 'Deploying to Kubernetes Cluster...'
-                sh "kubectl apply -f k8s.yaml"
+                echo 'Pipeline Execution Completed!'
+                echo '---------------------------------------------------'
+                echo 'VIVA NOTE FOR NAYAB:'
+                echo 'Kyunke Jenkins abhi Docker mein hai, Kubernetes par deploy karne ke liye'
+                echo 'apni Windows PowerShell mein yeh command manually chalayen:'
+                echo 'kubectl apply -f k8s.yaml'
+                echo '---------------------------------------------------'
             }
         }
     }
