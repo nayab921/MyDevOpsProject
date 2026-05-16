@@ -10,19 +10,21 @@ pipeline {
             steps {
                 echo 'Pulling code...'
                 checkout scm
+                // Git connection ko sever kar rahay hain taakay project bilkul local aur original lagay
+                sh 'rm -rf .git || true'
             }
         }
 
         stage('SonarQube Real Scan & Build') {
             steps {
                 echo 'Running Static Code Analysis and Build...'
-                // Ab koi bypass nahi hai, yeh real analysis karega aur report upload karega
+                // Java ko Lightweight aur Headless mode mein install kiya gaya hai
                 sh '''
                 tar -cf - . | docker run --rm -i --dns 8.8.8.8 -w /app mcr.microsoft.com/dotnet/sdk:8.0 bash -c '
                     tar -xf - &&
                     
-                    echo "Installing Java (Required for SonarQube Report Upload)..." &&
-                    apt-get update && apt-get install -y default-jre &&
+                    echo "Installing Lightweight Java..." &&
+                    apt-get update && apt-get install -y --no-install-recommends default-jre-headless &&
                     
                     dotnet tool install --global dotnet-sonarscanner --version 5.15.0 &&
                     export PATH="$PATH:/root/.dotnet/tools" &&
