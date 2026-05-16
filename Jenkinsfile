@@ -2,58 +2,56 @@ pipeline {
     agent any
     
     environment {
-        DOCKER_HUB_CREDS = credentials('dockerhub-id') 
         IMAGE_NAME = 'nayab010/mydevopsproject'
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                echo 'GitHub se code download ho raha hai...'
+                echo 'Pulling latest code from GitHub...'
                 checkout scm
             }
         }
 
-        stage('SonarQube Analysis') {
+        stage('SonarQube Real Analysis') {
             steps {
-                echo 'Running Static Code Analysis...'
-                sh 'echo "SonarQube Scan Passed: 0 Bugs, 0 Vulnerabilities"' 
-            }
-        }
-
-        stage('Trivy Security Scan') {
-            steps {
-                echo 'Scanning Docker Image for Vulnerabilities...'
-                sh 'trivy image --severity HIGH,CRITICAL ${IMAGE_NAME}:latest || true'
+                echo 'Running Real Static Code Analysis...'
+                // Yahan YOUR_TOKEN ki jagah apna SonarQube ka token daalna hai
+                bat 'dotnet sonarscanner begin /k:"MyDevOpsProject" /d:sonar.host.url="http://localhost:9000" /d:sonar.login="YOUR_TOKEN"'
+                bat 'dotnet build "MyDevOpsProject.csproj"'
+                bat 'dotnet sonarscanner end /d:sonar.login="sqa_973cb53575b7804669c0ea881994528bfb0566f4"'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo 'Docker Image...'
-                sh 'docker build -t ${IMAGE_NAME}:latest .'
+                echo 'Building Real Docker Image...'
+                bat "docker build -t ${IMAGE_NAME}:latest ."
             }
         }
 
-        stage('Run Selenium Tests') {
+        stage('Trivy Security Scan') {
             steps {
-                echo 'Selenium Automation Tests...'
-                sh 'echo "Selenium Tests Passed: Login and Authentication verified successfully!"'
+                echo 'Running Real Vulnerability Scan...'
+                // Yeh command real mein scan karegi aur error aane par fail hogi
+                bat "trivy image --severity HIGH,CRITICAL ${IMAGE_NAME}:latest"
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
-                echo 'Image Docker Hub Uploading...'
-                sh 'echo $DOCKER_HUB_CREDS_PSW | docker login -u $DOCKER_HUB_CREDS_USR --password-stdin'
-                sh 'docker push ${IMAGE_NAME}:latest'
+                echo 'Pushing to Docker Hub...'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-id', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                    bat "echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin"
+                    bat "docker push ${IMAGE_NAME}:latest"
+                }
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Deploy to Minikube') {
             steps {
-                echo 'Kubernetes Minikube par deploy ho raha hai...'
-                sh 'export KUBECONFIG=/home/nayab/.kube/config && kubectl apply -f k8s.yaml'
+                echo 'Deploying to Kubernetes Cluster...'
+                bat "kubectl apply -f k8s.yaml"
             }
         }
     }
