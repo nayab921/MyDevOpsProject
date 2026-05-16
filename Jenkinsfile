@@ -16,8 +16,9 @@ pipeline {
         stage('SonarQube & Build') {
             steps {
                 echo 'Running Static Code Analysis and Build...'
+                // Maine yahan --network host add kiya hai taakay packet drop ka masla hamesha ke liye khatam ho jaye
                 sh '''
-                tar -cf - . | docker run --rm -i --dns 8.8.8.8 -w /app mcr.microsoft.com/dotnet/sdk:8.0 bash -c '
+                tar -cf - . | docker run --rm -i --network host -w /app mcr.microsoft.com/dotnet/sdk:8.0 bash -c '
                     tar -xf - &&
                     dotnet tool install --global dotnet-sonarscanner --version 5.15.0 &&
                     export PATH="$PATH:/root/.dotnet/tools" &&
@@ -26,12 +27,11 @@ pipeline {
                     echo "Starting SonarScanner..." &&
                     dotnet sonarscanner begin /k:"MyDevOpsProject" /d:sonar.host.url="http://192.168.100.235:9000" /d:sonar.login="sqa_973cb53575b7804669c0ea881994528bfb0566f4" || true &&
                     
-                    echo "Restoring Packages (With Auto-Resume Hack)..." &&
-                    # Ye loop 5 dafa try karega aur progress save rakhega!
+                    echo "Restoring Packages (Network Bypass Mode)..." &&
                     for i in {1..5}; do 
                         echo "Attempt $i..."
-                        dotnet restore "$PROJECT_FILE" --disable-parallel && break || echo "Network glitch! Resuming download..."
-                        sleep 3
+                        dotnet restore "$PROJECT_FILE" --disable-parallel --no-cache && break || echo "Retrying..."
+                        sleep 2
                     done &&
                     
                     echo "Building Project..." &&
