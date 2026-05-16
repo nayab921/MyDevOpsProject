@@ -1,20 +1,14 @@
-# Step 1: Use official .NET 8 SDK image to build the app
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-
-# Copy the project file and restore dependencies
 COPY ["MyDevOpsProject.csproj", "./"]
-RUN dotnet restore "MyDevOpsProject.csproj"
-
-# Copy the rest of the code and build
+# Restore low memory mode mein
+RUN dotnet restore "MyDevOpsProject.csproj" --disable-parallel
 COPY . .
-RUN dotnet build "MyDevOpsProject.csproj" -c Release -o /app/build
-
-# Publish the application
+# Build aur Publish memory diet par (/m:1 aur shared compilation off)
+RUN dotnet build "MyDevOpsProject.csproj" -c Release -o /app/build /m:1 -p:UseSharedCompilation=false
 FROM build AS publish
-RUN dotnet publish "MyDevOpsProject.csproj" -c Release -o /app/publish
+RUN dotnet publish "MyDevOpsProject.csproj" -c Release -o /app/publish /m:1 -p:UseSharedCompilation=false
 
-# Step 2: Use smaller ASP.NET runtime image for the final container
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 EXPOSE 8080
