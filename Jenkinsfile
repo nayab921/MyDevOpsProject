@@ -23,7 +23,7 @@ pipeline {
                     export PATH="$PATH:/root/.dotnet/tools" &&
                     PROJECT_FILE=$(find . -name "*.csproj" | head -n 1) &&
                     echo "Found project file: $PROJECT_FILE" &&
-                    dotnet sonarscanner begin /k:"MyDevOpsProject" /d:sonar.host.url="http://host.docker.internal:9000" /d:sonar.login="sqa_973cb53575b7804669c0ea881994528bfb0566f4" &&
+                    dotnet sonarscanner begin /k:"MyDevOpsProject" /d:sonar.host.url=" 192.168.100.235" /d:sonar.login="sqa_973cb53575b7804669c0ea881994528bfb0566f4" &&
                     dotnet restore "$PROJECT_FILE" --disable-parallel &&
                     dotnet build "$PROJECT_FILE" --no-restore &&
                     dotnet sonarscanner end /d:sonar.login="sqa_973cb53575b7804669c0ea881994528bfb0566f4"
