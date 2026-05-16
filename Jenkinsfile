@@ -16,17 +16,19 @@ pipeline {
         stage('SonarQube Real Analysis') {
             steps {
                 echo 'Running Real Static Code Analysis using Docker...'
-                sh """
-                docker run --rm -v "${WORKSPACE}:/app" -w /app mcr.microsoft.com/dotnet/sdk:8.0 bash -c '
+                // Volume mount ki jagah hum code ko tar file bana kar direct container mein inject kar rahay hain
+                sh '''
+                tar -cf - . | docker run --rm -i -w /app mcr.microsoft.com/dotnet/sdk:8.0 bash -c '
+                    tar -xf - &&
                     dotnet tool install --global dotnet-sonarscanner --version 5.15.0 &&
-                    export PATH="\$PATH:/root/.dotnet/tools" &&
-                    PROJECT_FILE=\$(find . -name "*.csproj" | head -n 1) &&
-                    echo "Found project file: \$PROJECT_FILE" &&
+                    export PATH="$PATH:/root/.dotnet/tools" &&
+                    PROJECT_FILE=$(find . -name "*.csproj" | head -n 1) &&
+                    echo "Found project file: $PROJECT_FILE" &&
                     dotnet sonarscanner begin /k:"MyDevOpsProject" /d:sonar.host.url="http://host.docker.internal:9000" /d:sonar.login="sqa_973cb53575b7804669c0ea881994528bfb0566f4" &&
-                    dotnet build \$PROJECT_FILE &&
+                    dotnet build "$PROJECT_FILE" &&
                     dotnet sonarscanner end /d:sonar.login="sqa_973cb53575b7804669c0ea881994528bfb0566f4"
                 '
-                """
+                '''
             }
         }
 
@@ -48,7 +50,7 @@ pipeline {
             steps {
                 echo 'Pushing to Docker Hub...'
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-id', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                    sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
                     sh "docker push ${IMAGE_NAME}:latest"
                 }
             }
