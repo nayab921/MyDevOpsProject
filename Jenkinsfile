@@ -16,14 +16,14 @@ pipeline {
         stage('SonarQube Real Analysis') {
             steps {
                 echo 'Running Real Static Code Analysis using Docker...'
-                // Hum .NET SDK ka official container use kar ke code scan karwayenge
-                // host.docker.internal use kiya gaya hai taakay yeh Windows wale SonarQube tak pounch sakay
                 sh """
                 docker run --rm -v "${WORKSPACE}:/app" -w /app mcr.microsoft.com/dotnet/sdk:8.0 bash -c '
-                    dotnet tool install --global dotnet-sonarscanner &&
+                    dotnet tool install --global dotnet-sonarscanner --version 5.15.0 &&
                     export PATH="\$PATH:/root/.dotnet/tools" &&
+                    PROJECT_FILE=\$(find . -name "*.csproj" | head -n 1) &&
+                    echo "Found project file: \$PROJECT_FILE" &&
                     dotnet sonarscanner begin /k:"MyDevOpsProject" /d:sonar.host.url="http://host.docker.internal:9000" /d:sonar.login="sqa_973cb53575b7804669c0ea881994528bfb0566f4" &&
-                    dotnet build &&
+                    dotnet build \$PROJECT_FILE &&
                     dotnet sonarscanner end /d:sonar.login="sqa_973cb53575b7804669c0ea881994528bfb0566f4"
                 '
                 """
@@ -40,7 +40,6 @@ pipeline {
         stage('Trivy Security Scan') {
             steps {
                 echo 'Running Real Vulnerability Scan via Docker...'
-                // Trivy ka official container direct aapki image scan karega!
                 sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL ${IMAGE_NAME}:latest || true"
             }
         }
