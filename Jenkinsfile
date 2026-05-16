@@ -10,21 +10,23 @@ pipeline {
             steps {
                 echo 'Pulling code...'
                 checkout scm
-                // Git connection ko sever kar rahay hain taakay project bilkul local aur original lagay
                 sh 'rm -rf .git || true'
             }
         }
 
         stage('SonarQube Real Scan & Build') {
             steps {
-                echo 'Running Static Code Analysis and Build...'
-                // Java ko Lightweight aur Headless mode mein install kiya gaya hai
+                echo 'Running Static Code Analysis and Build (Memory Optimized)...'
                 sh '''
                 tar -cf - . | docker run --rm -i --dns 8.8.8.8 -w /app mcr.microsoft.com/dotnet/sdk:8.0 bash -c '
                     tar -xf - &&
                     
                     echo "Installing Lightweight Java..." &&
                     apt-get update && apt-get install -y --no-install-recommends default-jre-headless &&
+                    
+                    echo "Setting Memory Limits for Docker..." &&
+                    export SONAR_SCANNER_OPTS="-Xmx512m" &&
+                    export DOTNET_CLI_TELEMETRY_OPTOUT=1 &&
                     
                     dotnet tool install --global dotnet-sonarscanner --version 5.15.0 &&
                     export PATH="$PATH:/root/.dotnet/tools" &&
@@ -40,8 +42,9 @@ pipeline {
                         sleep 2
                     done &&
                     
-                    echo "Building Project..." &&
-                    dotnet build "$PROJECT_FILE" --no-restore -c Release &&
+                    echo "Building Project (Low Memory Mode)..." &&
+                    # RAM bachane ke liye strict flags add kiye hain
+                    dotnet build "$PROJECT_FILE" --no-restore -c Release /m:1 -p:UseSharedCompilation=false &&
                     
                     echo "Uploading Report to SonarQube..." &&
                     dotnet sonarscanner end /d:sonar.login="sqa_973cb53575b7804669c0ea881994528bfb0566f4"
